@@ -83,35 +83,51 @@ export class StreamManager {
 
 				source.addEventListener("message", (e: any) => {
 					if (e.data != "[DONE]") {
-						const payload = JSON.parse(e.data);
-						const text = payload.choices[0].delta.content;
 
-						// if text undefined, then do nothing
-						if (!text) {
-							return;
+						console.log("data");
+						console.log(e.data);
+
+						// Gordon hack: split the string between '}' and '{'
+						// since the server sends multiple JSON objects in one
+						// string sometimes.
+                        const hunks = e.data.split(/(?<=})(?={)/);
+
+						for (const hunk of hunks) {
+							let payload;
+							try {
+								payload = JSON.parse(hunk);
+							} catch (error) {
+								console.error("Error parsing JSON:", error);
+								console.log(hunk);
+								return; // Exit the function if parsing fails
+							}
+							const text = payload.choices[0].delta.content;
+
+							if (text) {
+								const cursor = editor.getCursor();
+								const convPos = editor.posToOffset(cursor);
+
+								// @ts-ignore
+								const cm6 = editor.cm;
+								const transaction = cm6.state.update({
+									changes: {
+										from: convPos,
+										to: convPos,
+										insert: text,
+									},
+								});
+								cm6.dispatch(transaction);
+
+								txt += text;
+
+								const newCursor = {
+									line: cursor.line,
+									ch: cursor.ch + text.length,
+								};
+								editor.setCursor(newCursor);
+							}
+
 						}
-
-						const cursor = editor.getCursor();
-						const convPos = editor.posToOffset(cursor);
-
-						// @ts-ignore
-						const cm6 = editor.cm;
-						const transaction = cm6.state.update({
-							changes: {
-								from: convPos,
-								to: convPos,
-								insert: text,
-							},
-						});
-						cm6.dispatch(transaction);
-
-						txt += text;
-
-						const newCursor = {
-							line: cursor.line,
-							ch: cursor.ch + text.length,
-						};
-						editor.setCursor(newCursor);
 					} else {
 						source.close();
 						console.log("[ChatGPT MD] SSE Closed");
