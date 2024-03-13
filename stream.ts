@@ -84,12 +84,13 @@ export class StreamManager {
 				source.addEventListener("message", (e: any) => {
 					if (e.data != "[DONE]") {
 
-						console.log("data");
-						console.log(e.data);
+						// console.log("data");
+						// console.log(e.data);
 
 						// Gordon hack: split the string between '}' and '{'
 						// since the server sends multiple JSON objects in one
-						// string sometimes.
+						// string sometimes, causing drama with the original implementation.
+						// _Perhaps_ this is a problem introduced by the GPT-4 API.  No idea.
                         const hunks = e.data.split(/(?<=})(?={)/);
 
 						for (const hunk of hunks) {
