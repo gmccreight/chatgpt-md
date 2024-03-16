@@ -21,6 +21,8 @@ export const unfinishedCodeBlock = (txt: string) => {
 	return matcher.length % 2 !== 0;
 };
 
+// TODO - once I get my development tools working better,
+// make a parameter "titlePrefix" and add it to the options, too.
 export const writeInferredTitleToEditor = async (
 	vault: Vault,
 	view: MarkdownView,
@@ -32,14 +34,15 @@ export const writeInferredTitleToEditor = async (
 		// set title of file
 		const file = view.file;
 		// replace trailing / if it exists
-		const folder = chatFolder.replace(/\/$/, "");
+		// const folder = chatFolder.replace(/\/$/, "");
+		const folder = "";
 
 		// if new file name exists in directory, append a number to the end
-		let newFileName = `${folder}/${title}.md`;
+		let newFileName = `${folder}/chat - ${title}.md`;
 		let i = 1;
 
 		while (await vault.adapter.exists(newFileName)) {
-			newFileName = `${folder}/${title} (${i}).md`;
+			newFileName = `${folder}/chat - ${title} (${i}).md`;
 			i++;
 		}
 
